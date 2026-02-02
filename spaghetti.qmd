@@ -1,0 +1,127 @@
+---
+title: "spaghetti"
+format: html
+---
+
+```{r}
+# Import packages
+library(stars)
+library(terra)
+library(gdalUtilities)
+
+```
+
+
+```{r}
+tile <- read_stars("data/n34_w120_1arc_v3.tif")
+
+```
+
+## Transform geotif into COG
+```{r}
+gdal_translate("data/n34_w120_1arc_v3.tif", 
+               "data/sb_dem_cog.tif",
+               of = "COG", # Output Format
+               co = c("COMPRESS=DEFLATE", "OVERVIEWS=AUTO")) # Creation Options
+```
+
+```{r}
+#  Read the COG
+tile_cog <- read_stars("data/sb_dem_cog.tif")
+
+```
+
+```{r}
+plot(tile) +plot(tile_cog)
+```
+
+```{r}
+plot(sb_area)
+```
+
+
+```{r}
+library(sf)
+library(jsonlite)
+
+# Config
+cog_path <- "data/sb_dem_cog.tif"
+stac_root <- "stac"
+item_id <- "sb_dem"
+
+dir.create(file.path(stac_root, "items"), recursive = TRUE, showWarnings = FALSE)
+
+# Read data
+r <- read_stars(cog_path)
+
+# Get bbox in EPSG:4326
+sf_use_s2(FALSE)
+bb <- st_bbox(r)
+poly_4326 <- st_transform(st_as_sfc(bb), 4326)
+bb_4326 <- st_bbox(poly_4326)
+bbox_4326 <- as.numeric(c(bb_4326["xmin"], bb_4326["ymin"], bb_4326["xmax"], bb_4326["ymax"]))
+
+# Build Item
+item <- list(
+  stac_version = "1.0.0",
+  type = "Feature",
+  id = item_id,
+  bbox = bbox_4326,
+  properties = list(datetime = "2026-01-25T00:00:00Z"),
+  assets = list(
+    data = list(
+      href = cog_path,
+      type = "image/tiff; application=geotiff; profile=cloud-optimized",
+      roles = list("data")))
+)
+```
+
+
+```{r}
+# Save your STAC item as a JSON file
+write_json(item, file.path(stac_root, "items", paste0(item_id, ".json")), #Build the file path 
+           auto_unbox = TRUE, # Converts single-element vectors to scalars in JSON
+           pretty = TRUE) # Format with indentation (human-readable)
+
+cat("Wrote: stac/items/sb_dem.json\n")
+```
+
+
+```{r}
+str(item)
+```
+
+## Query STAC item to a area of interest
+```{r}
+
+# 1. Define YOUR area of interest (small part of Santa Barbara)
+aoi <- st_bbox(c(xmin = -119.72, ymin = 34.42, 
+                  xmax = -119.68, ymax = 34.44), 
+                crs = 4326)
+
+# 2. Read STAC item
+item <- read_json("stac/items/sb_dem.json")
+
+# 3. Check if STAC item intersects your AOI
+item_bbox <- st_bbox(c(xmin = item$bbox[[1]], 
+                        ymin = item$bbox[[2]], 
+                        xmax = item$bbox[[3]], 
+                        ymax = item$bbox[[4]]), 
+                      crs = 4326)
+
+intersects <- st_intersects(st_as_sfc(aoi), 
+                            st_as_sfc(item_bbox), 
+                            sparse = FALSE)[1,1]
+
+# 4. If intersects, load and crop to YOUR AOI
+if (intersects) {
+  dem <- read_stars(item$assets$data$href)
+  dem_aoi <- st_crop(dem, aoi)
+  plot(dem_aoi, main = "AOI")
+} else {
+  cat("No intersection with AOI\n")
+}
+```
+
+
+

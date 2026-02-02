@@ -1,0 +1,32 @@
+---
+title: "WRI"
+format: html
+---
+
+
+```{r}
+library(WRIspaghetti)
+library(terra)
+```
+
+
+```{r}
+say_aloha("ignitR")
+```
+
+
+```{r}
+# Assign url
+url <- "https://knb.ecoinformatics.org/knb/d1/mn/v2/object/urn%3Auuid%3A199c940d-3342-442a-8e2b-4099ca07de69"
+
+#Apply crop function
+top_half <- crop_half(url)
+plot(top_half)
+```
+
+
+
+
+
+
+

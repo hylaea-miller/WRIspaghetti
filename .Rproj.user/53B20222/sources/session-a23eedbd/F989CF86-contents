@@ -1,0 +1,24 @@
+Package: WRIspaghetti
+Type: Package
+Title: What the Package Does (Title Case)
+Version: 0.1.0
+Authors@R: c(
+    person(
+      "Jane", "Doe",
+      email = "jane@example.com",
+      role = c("aut", "cre")
+    )
+  )
+Description: This package is a test version of the WRI package to practice functions and R package functionality.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+URL: https://github.com/hylaea-miller/WRIspaghetti
+BugReports: https://github.com/hylaea-miller/WRIspaghetti/issues
+Imports: crayon, emo
+Remotes: hadley/emo
+Suggests: testthat,
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
+RoxygenNote: 7.3.2

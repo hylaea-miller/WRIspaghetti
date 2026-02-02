@@ -1,0 +1,108 @@
+
+
+```{r}
+library(terra)
+library(stars)
+```
+
+```{r}
+rast <- rast(here::here("data/santa_barbara_coast_iceplant_locations_2020_west_crs26910.tif"))
+```
+
+```{r}
+plot(rast)
+```
+
+
+```{r}
+# Set GDAL config options
+
+cog_url <- "https://knb.ecoinformatics.org/knb/d1/mn/v2/object/urn%3Auuid%3A199c940d-3342-442a-8e2b-4099ca07de69"
+
+# Open the COG
+r <- rast(cog_url)
+```
+
+
+```{r}
+# Get the extent and resolution
+ext_r <- ext(r)
+res_r <- res(r)
+height <- nrow(r)
+
+# Fix: Compute ymin for the bottom half correctly
+bottom_half_ymax <- ymax(ext_r) - (height / 2) * abs(res_r[2])  # Use absolute value of res
+
+# Define the correct extent for cropping
+bottom_half_extent <- ext(xmin(ext_r), xmax(ext_r), ymin(ext_r), bottom_half_ymax)
+
+# Crop to the bottom half and plot
+bottom_half <- crop(r, bottom_half_extent)
+plot(bottom_half)
+```
+```{r}
+# Top half: from middle to top
+top_half_ymin <- ymin(ext_r) + (height / 2) * abs(res_r[2])
+top_half_extent <- ext(xmin(ext_r), xmax(ext_r), top_half_ymin, ymax(ext_r))
+
+# Crop and plot
+top_half <- crop(r, top_half_extent)
+plot(top_half)
+```
+
+
+
+```{r}
+plot(r)
+```
+
+Validate cog
+
+```{r}
+
+
+library(vapour)
+
+# Validate COG
+cog_file <- "data/sb_dem_cog.tif"
+
+info <- gdalinfo(cog_file, approx_stats = FALSE)
+
+# Get COG info (overviews, tiling, etc.)
+info <- vapour_raster_info(cog_file)
+print(info)
+```
+```{r}
+# Define the COG URL
+cog_url <- "https://knb.ecoinformatics.org/knb/d1/mn/v2/object/urn%3Auuid%3A199c940d-3342-442a-8e2b-4099ca07de69/ santa_barbara_coast_iceplant_locations_2020_west_crs26910.tif"
+
+# Set environment variables for GDAL
+setGDALconfig("AWS_NO_SIGN_REQUEST", "YES")
+setGDALconfig("GDAL_DISABLE_READDIR_ON_OPEN", "EMPTY_DIR")
+
+# Open the COG
+r <- rast(cog_url)
+
+# Get the extent and resolution
+ext_r <- ext(r)
+res_r <- res(r)
+height <- nrow(r)
+
+# Fix: Compute ymin for the bottom half correctly
+bottom_half_ymax <- ymax(ext_r) - (height / 2) * abs(res_r[2])  # Use absolute value of res
+
+# Define the correct extent for cropping
+bottom_half_extent <- ext(xmin(ext_r), xmax(ext_r), ymin(ext_r), bottom_half_ymax)
+
+# Crop to the bottom half and plot
+bottom_half <- crop(r, bottom_half_extent)
+plot(bottom_half)
+```
+
+https://tier2.ess-dive.lbl.gov/doi-10-5440-2205338/data/Council_MM71/Council_MM71_20210821_Flight1/Level_1/NGEEArctic_Council_20210821_SOLO_Flight1_DSM.tif
+
+
+```{r}
+
+```
+

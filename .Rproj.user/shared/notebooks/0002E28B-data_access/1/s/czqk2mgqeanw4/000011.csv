@@ -1,0 +1,1 @@
+"0","rast <- rast(here::here(""data/santa_barbara_coast_iceplant_locations_2020_west_crs26910.tif""))"
